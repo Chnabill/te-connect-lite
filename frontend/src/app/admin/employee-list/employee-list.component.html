@@ -1,0 +1,134 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="onLogout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Admin Employee List</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto">
+      <div class="w-full mx-auto sm:px-4 min-h-screen flex flex-col items-center">
+        <!-- Filters and View Toggle (separated from table/cards) -->
+        <div class="w-full flex flex-col md:flex-row gap-4 mb-4 mt-2">
+          <input [(ngModel)]="searchName" (ngModelChange)="onNameChange()" placeholder="Search by name..." class="p-2 border rounded w-full md:w-1/2" />
+          <select [(ngModel)]="selectedDepartment" (change)="onDepartmentChange()" class="p-2 border rounded w-full md:w-1/2">
+            <option value="">All Departments</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+          <div class="flex justify-end md:ml-auto">
+            <button (click)="viewMode = viewMode === 'table' ? 'cards' : 'table'" class="inline-flex items-center px-4 py-2 bg-white text-gray-700 border-2 border-gray-200 font-semibold rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+              <svg *ngIf="viewMode === 'table'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+              <svg *ngIf="viewMode === 'cards'" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              {{ viewMode === 'table' ? 'Grid View' : 'Table View' }}
+            </button>
+          </div>
+        </div>
+        <div class="w-full border-b border-gray-200 mb-4"></div>
+        <div class="w-full bg-white rounded-lg shadow p-6">
+          <!-- User Table or Cards -->
+          <ng-container *ngIf="viewMode === 'table'; else cardView">
+            <table class="w-full text-left border-collapse mb-4">
+              <thead>
+                <tr>
+                  <th class="border-b p-2">Name</th>
+                  <th class="border-b p-2">Email</th>
+                  <th class="border-b p-2">Department</th>
+                  <th class="border-b p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let user of paginatedUsers">
+                  <td class="p-2">{{ user.full_name }}</td>
+                  <td class="p-2">{{ user.email }}</td>
+                  <td class="p-2">{{ user.department }}</td>
+                  <td class="p-2">
+                    <button (click)="showUserDetails(user)" class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">Details</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </ng-container>
+          <ng-template #cardView>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-4">
+              <app-employee-card *ngFor="let user of paginatedUsers"
+                [employee]="mapToEmployeeCard(user)"
+                mode="admin"
+                (view)="showUserDetails(user)"
+                (delete)="deleteEmployee(user.id)"></app-employee-card>
+            </div>
+          </ng-template>
+          <!-- Pagination -->
+          <div class="flex justify-between items-center">
+            <button (click)="prevPage()" [disabled]="currentPage === 1" class="px-3 py-1 bg-gray-200 rounded">Prev</button>
+            <span>Page {{ currentPage }} of {{ totalPages }}</span>
+            <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-3 py-1 bg-gray-200 rounded">Next</button>
+          </div>
+        </div>
+      </div>
+      <!-- User Details Modal -->
+      <div *ngIf="selectedUser" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border border-slate-200/70 relative">
+          <button (click)="closeUserDetails()" class="absolute top-3 right-3 text-gray-400 hover:text-red-600 text-2xl font-bold">&times;</button>
+          <div class="flex flex-col items-center gap-2">
+            <div class="mb-3">
+              <img *ngIf="selectedUser.user_image" [src]="selectedUser.user_image" alt="User Image" class="w-24 h-24 rounded-full border-4 border-blue-100 shadow mb-2 object-cover" />
+              <div *ngIf="!selectedUser.user_image" class="w-24 h-24 rounded-full bg-blue-200 flex items-center justify-center text-3xl text-white font-bold mb-2">
+                {{ selectedUser.full_name[0] }}
+              </div>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">{{ selectedUser.full_name }}</h3>
+            <div class="flex flex-wrap gap-2 mb-2">
+              <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-semibold border border-blue-200">{{ selectedUser.department || 'N/A' }}</span>
+              <span class="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold border border-gray-200">TE ID: {{ selectedUser.teId }}</span>
+            </div>
+            <div class="w-full mt-2">
+              <div class="flex items-center gap-2 text-gray-600 mb-1">
+                <i class="fas fa-envelope text-blue-400"></i>
+                <span class="font-medium">{{ selectedUser.email }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-600 mb-1">
+                <i class="fas fa-phone-alt text-green-400"></i>
+                <span>{{ selectedUser.phone || '—' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-600 mb-1">
+                <i class="fas fa-briefcase text-purple-400"></i>
+                <span>{{ selectedUser.position || '—' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-600 mb-1">
+                <i class="fas fa-calendar-alt text-indigo-400"></i>
+                <span>{{ selectedUser.joining_date || '—' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-gray-600 mb-1">
+                <i class="fas fa-lightbulb text-yellow-400"></i>
+                <ng-container *ngIf="selectedUserSkills.length > 0; else noSkills">
+                  <span *ngFor="let skill of selectedUserSkills" class="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-medium border border-slate-200 mr-1">{{ skill }}</span>
+                </ng-container>
+                <ng-template #noSkills><span>—</span></ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

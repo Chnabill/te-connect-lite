@@ -1,0 +1,18 @@
+/* Minimal custom styles for task management */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.5rem;
+}
+.bg-white {
+  background: #fff;
+}
+.rounded {
+  border-radius: 0.5rem;
+}
+.shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+} 

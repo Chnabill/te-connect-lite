@@ -1,0 +1,13 @@
+#2f4956
+#e88200
+#ffffff
+#157c84
+
+
+
+alembic : we use it to change the database automatically in case we needed to add/remove a new column instead of doing it manually
+*****SO NOW WHENever i have a change in the model i need to run   alembic revision --autogenerate -m "Add something " 
+*****followed by   alembic upgrade head
+
+alembic revision --autogenerate -m "add announcement table"
+alembic upgrade head

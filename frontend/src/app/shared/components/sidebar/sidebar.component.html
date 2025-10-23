@@ -1,0 +1,64 @@
+<div 
+  class="fixed inset-y-0 left-0 z-50 w-64 bg-[#e67e22] shadow-xl transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 h-screen"
+  [class.w-16]="!sidebarOpen"
+  [class.w-64]="sidebarOpen"
+  [class.translate-x-0]="sidebarOpen"
+  [class.-translate-x-full]="!sidebarOpen && isMobile">
+  
+  <!-- Sidebar Toggle Button -->
+  <button 
+    (click)="toggleSidebar()"
+    class="absolute top-1/2 -right-3 transform -translate-y-1/2 z-50 flex items-center justify-center w-6 h-6 rounded-full bg-white text-[#0F172A] hover:bg-gray-100 transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-white/50"
+    style="outline: none !important; outline-offset: 0 !important;">
+    <i [class]="sidebarOpen ? 'fas fa-angle-double-left text-sm' : 'fas fa-angle-double-right text-sm'"></i>
+  </button>
+
+  <!-- Sidebar Header -->
+
+    <div class="flex items-center justify-center h-16 border-b border-gray-200">
+      <img 
+        src="assets/images/TE_Connectivity_logo.svg.png" 
+        alt="TE Connectivity Logo" 
+        [ngClass]="sidebarOpen ? 'h-14' : 'h-8'"
+      />
+    </div>
+
+
+  <!-- Navigation Menu -->
+  <nav class="mt-6 px-3 h-[calc(100vh-8rem)] overflow-y-auto">
+    <div class="space-y-2">
+      <a 
+        *ngFor="let item of sidebarItems"
+        (click)="setActiveSection(item.id)"
+        [class]="'flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors cursor-pointer ' + 
+                 (activeSection === item.id ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white')">
+        <i [class]="item.icon + ' text-lg' + (sidebarOpen ? ' mr-3' : '')"></i>
+        <span [class.hidden]="!sidebarOpen">{{ item.name }}</span>
+        <span *ngIf="item.badge && sidebarOpen" [class]="'ml-auto px-2 py-1 text-xs rounded-full ' + item.badgeClass">
+          {{ item.badge }}
+        </span>
+      </a>
+    </div>
+
+    <!-- Logout Button -->
+    <div class="absolute bottom-6 left-0 right-0 px-3">
+      <button 
+        (click)="logout()"
+        class="w-full group relative overflow-hidden flex items-center justify-center px-4 py-3 hover:bg-white/20 text-white rounded-xl transition-all duration-300"
+        [class.justify-center]="!sidebarOpen">
+        <div class="absolute inset-0 bg-gradient-to-r from-white/0 to-white/0 group-hover:from-white/5 group-hover:to-white/5 transition-all duration-300"></div>
+        <i class="fas fa-sign-out-alt text-lg transform group-hover:scale-110 transition-transform duration-300 absolute opacity-100 group-hover:opacity-0" [class.mr-3]="sidebarOpen"></i>
+        <i class="fas fa-arrow-right-from-bracket text-lg transform group-hover:scale-110 transition-transform duration-300 absolute opacity-0 group-hover:opacity-100" [class.mr-3]="sidebarOpen"></i>
+        <span [class.hidden]="!sidebarOpen" class="font-medium ml-6">Sign Out</span>
+        <div class="absolute inset-0 bg-gradient-to-r from-white/0 to-white/0 group-hover:from-white/5 group-hover:to-white/5 transition-all duration-300"></div>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- Sidebar Overlay for Mobile -->
+<div 
+  *ngIf="sidebarOpen" 
+  class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+  (click)="toggleSidebar()">
+</div> 

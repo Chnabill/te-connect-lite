@@ -1,0 +1,419 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="onLogout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Comprehensive Task Management</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div class="container mx-auto px-4 py-6">
+        
+        <!-- Success/Error Messages -->
+        <div *ngIf="success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+          <i class="fas fa-check-circle mr-2"></i>{{ success }}
+        </div>
+        <div *ngIf="error" class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+          <i class="fas fa-exclamation-triangle mr-2"></i>{{ error }}
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Total Tasks</p>
+                <p class="text-3xl font-bold text-gray-900">{{ getTaskStats().total }}</p>
+              </div>
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-tasks text-blue-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Completed</p>
+                <p class="text-3xl font-bold text-green-600">{{ getTaskStats().completed }}</p>
+              </div>
+              <div class="p-3 bg-green-100 rounded-full">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">In Progress</p>
+                <p class="text-3xl font-bold text-yellow-600">{{ getTaskStats().inProgress }}</p>
+              </div>
+              <div class="p-3 bg-yellow-100 rounded-full">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-gray-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Pending</p>
+                <p class="text-3xl font-bold text-gray-600">{{ getTaskStats().pending }}</p>
+              </div>
+              <div class="p-3 bg-gray-100 rounded-full">
+                <i class="fas fa-pause-circle text-gray-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Overdue</p>
+                <p class="text-3xl font-bold text-red-600">{{ getTaskStats().overdue }}</p>
+              </div>
+              <div class="p-3 bg-red-100 rounded-full">
+                <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <!-- Search -->
+            <div class="flex-1 max-w-md">
+              <div class="relative">
+                <input
+                  type="text"
+                  [(ngModel)]="searchTerm"
+                  (input)="onSearchChange()"
+                  placeholder="Search tasks, assignees, or departments..."
+                  class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-4">
+              <select [(ngModel)]="statusFilter" (change)="onStatusFilterChange()" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              <select [(ngModel)]="priorityFilter" (change)="onPriorityFilterChange()" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="all">All Priority</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+
+              <select [(ngModel)]="departmentFilter" (change)="onDepartmentFilterChange()" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="all">All Departments</option>
+                <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+              </select>
+            </div>
+
+            <!-- Add Task Button -->
+            <button
+              (click)="openAddModal()"
+              class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <i class="fas fa-plus"></i>
+              Add Task
+            </button>
+          </div>
+        </div>
+
+        <!-- Tasks Grid -->
+        <div class="grid gap-6">
+          <div *ngFor="let task of filteredTasks" class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <div class="p-6">
+              <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                <!-- Task Info -->
+                <div class="flex-1">
+                  <div class="flex items-start gap-3 mb-3">
+                    <div class="flex-1">
+                      <h3 class="text-xl font-bold text-gray-900 mb-2">{{ task.title }}</h3>
+                      <p class="text-gray-600 mb-3">{{ task.description }}</p>
+                      
+                      <div class="flex flex-wrap gap-2 mb-3">
+                        <span [ngClass]="getPriorityClass(task.priority)" class="px-3 py-1 rounded-full text-sm font-medium">
+                          {{ task.priority | titlecase }}
+                        </span>
+                        <span [ngClass]="getStatusClass(task.status)" class="px-3 py-1 rounded-full text-sm font-medium">
+                          {{ task.status | titlecase }}
+                        </span>
+                        <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                          {{ task.department }}
+                        </span>
+                      </div>
+
+                      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-user text-blue-500"></i>
+                          <span>{{ task.user_name }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-calendar text-green-500"></i>
+                          <span>{{ formatDate(task.due_date) }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-clock text-orange-500"></i>
+                          <span>{{ task.estimated_hours }}h estimated</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <i class="fas fa-chart-line text-purple-500"></i>
+                          <span>{{ task.progress }}% complete</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Progress Bar -->
+                  <div class="mb-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                      <span>Progress</span>
+                      <span>{{ task.progress }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        class="h-2 rounded-full transition-all duration-300"
+                        [ngClass]="{
+                          'bg-green-500': task.progress >= 80,
+                          'bg-yellow-500': task.progress >= 50 && task.progress < 80,
+                          'bg-red-500': task.progress < 50
+                        }"
+                        [style.width.%]="task.progress"
+                      ></div>
+                    </div>
+                  </div>
+
+                  <!-- Tags -->
+                  <div *ngIf="task.tags && task.tags.length > 0" class="flex flex-wrap gap-2">
+                    <span *ngFor="let tag of task.tags" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                      #{{ tag }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col gap-2 min-w-[120px]">
+                  <button
+                    (click)="openViewModal(task)"
+                    class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <i class="fas fa-eye"></i>
+                    View
+                  </button>
+                  <button
+                    (click)="openEditModal(task)"
+                    class="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <i class="fas fa-edit"></i>
+                    Edit
+                  </button>
+                  <button
+                    *ngIf="task.status !== 'completed'"
+                    (click)="updateTaskStatus(task.id, 'completed')"
+                    class="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <i class="fas fa-check"></i>
+                    Complete
+                  </button>
+                  <button
+                    (click)="deleteTask(task.id)"
+                    class="bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <i class="fas fa-trash"></i>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredTasks.length === 0" class="text-center py-12">
+          <div class="max-w-md mx-auto">
+            <div class="mb-4">
+              <i class="fas fa-tasks text-gray-300 text-6xl"></i>
+            </div>
+            <h3 class="text-xl font-medium text-gray-900 mb-2">No tasks found</h3>
+            <p class="text-gray-500 mb-6">No tasks match your current filters. Try adjusting your search or filters.</p>
+            <button
+              (click)="openAddModal()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            >
+              Create Your First Task
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold text-gray-900">Add New Task</h2>
+        <button (click)="closeAddModal()" class="text-gray-400 hover:text-gray-600 text-2xl">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    
+    <form (ngSubmit)="addTask()" class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Task Title *</label>
+          <input
+            [(ngModel)]="newTask.title"
+            name="title"
+            type="text"
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter task title"
+          >
+        </div>
+        
+        <div class="relative">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Assignee *</label>
+          <input
+            [(ngModel)]="newTask.user_name"
+            name="user_name"
+            type="text"
+            required
+            autocomplete="off"
+            (input)="onAssigneeInput($event)"
+            (keydown)="onAssigneeKeydown($event)"
+            (focus)="onAssigneeFocus()"
+            (blur)="onAssigneeBlur()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Start typing to search employees..."
+          >
+          
+          <!-- Autocomplete Dropdown -->
+          <div *ngIf="showEmployeeDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div
+              *ngFor="let employee of filteredEmployees; let i = index"
+              (click)="selectEmployee(employee)"
+              [class.bg-blue-50]="i === selectedEmployeeIndex"
+              class="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors duration-150"
+            >
+              <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                  <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    {{ getEmployeeInitials(employee.name) }}
+                  </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 truncate">{{ employee.name }}</p>
+                  <p class="text-xs text-gray-500 truncate">{{ employee.role }} • {{ employee.email }}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div *ngIf="filteredEmployees.length === 0" class="px-4 py-3 text-sm text-gray-500 text-center">
+              No employees found
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+          <select [(ngModel)]="newTask.department" name="department" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Select Department</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+          <select [(ngModel)]="newTask.priority" name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+          <input
+            [(ngModel)]="newTask.due_date"
+            name="due_date"
+            type="date"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Hours</label>
+          <input
+            [(ngModel)]="newTask.estimated_hours"
+            name="estimated_hours"
+            type="number"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="0"
+          >
+        </div>
+        
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+          <textarea
+            [(ngModel)]="newTask.description"
+            name="description"
+            rows="4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter task description"
+          ></textarea>
+        </div>
+      </div>
+      
+      <div class="flex justify-end gap-4 mt-8">
+        <button
+          type="button"
+          (click)="closeAddModal()"
+          class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors duration-200"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors duration-200"
+        >
+          Create Task
+        </button>
+      </div>
+    </form>
+  </div>
+</div> 

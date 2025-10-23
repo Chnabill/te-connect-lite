@@ -1,0 +1,38 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="onLogout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Admin Platform Settings</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto">
+      <div class="w-full max-w-5xl mx-auto px-2 sm:px-4 min-h-screen flex flex-col items-center justify-center">
+        <div class="w-full bg-white rounded-lg shadow p-6 mt-6">
+          <!-- Existing platform-settings content -->
+          <ng-container *ngTemplateOutlet="settingsContent"></ng-container>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<ng-template #settingsContent>
+  <!-- Place your existing platform-settings.component.html content here -->
+</ng-template>

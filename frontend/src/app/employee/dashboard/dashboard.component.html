@@ -1,0 +1,298 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+  [sidebarOpen]="sidebarOpen"
+  [isMobile]="isMobile"
+  [activeSection]="activeSection"
+  [sidebarItems]="sidebarItems"
+  (toggleSidebarEvent)="toggleSidebar()"
+  (setActiveSectionEvent)="setActiveSection($event)"
+  (logoutEvent)="logout()"
+  class="h-screen">
+</app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="logout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Dashboard</span>
+    </app-header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto">
+      <div class="min-h-screen  bg-orange-50 p-4 lg:p-8">
+        
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div 
+            *ngFor="let kpi of kpiData; let i = index"
+            class="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300"
+            [style.animation-delay]="(i * 0.1) + 's'">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-gray-600 text-sm font-medium mb-2">{{ kpi.label }}</h3>
+                <p class="text-3xl font-bold text-gray-900 mb-1">{{ kpi.value }}</p>
+                <p [class]="'text-sm font-medium ' + (kpi.trendDirection === 'up' ? 'text-green-600' : 'text-red-600')">
+                  <i [class]="kpi.trendDirection === 'up' ? 'fas fa-arrow-up mr-1' : 'fas fa-arrow-down mr-1'"></i>{{ kpi.trend }}
+                </p>
+              </div>
+              <div class="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center text-[#0F172A]/80">
+                <i [class]="kpi.icon + ' text-xl'"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Tasks List -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden lg:col-span-2">
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center">
+              <h3 class="font-semibold text-gray-900">My Tasks</h3>
+              <div class="flex space-x-2">
+                <button (click)="setFilter('all')" [ngClass]="{'bg-blue-100 text-blue-800': filter==='all', 'bg-gray-100 text-gray-700': filter!=='all'}" class="px-3 py-1 text-xs rounded-lg transition-colors">
+                  All
+                </button>
+                <button (click)="setFilter('pending')" [ngClass]="{'bg-blue-100 text-blue-800': filter==='pending', 'bg-gray-100 text-gray-700': filter!=='pending'}" class="px-3 py-1 text-xs rounded-lg transition-colors">
+                  Pending
+                </button>
+                <button (click)="setFilter('completed')" [ngClass]="{'bg-blue-100 text-blue-800': filter==='completed', 'bg-gray-100 text-gray-700': filter!=='completed'}" class="px-3 py-1 text-xs rounded-lg transition-colors">
+                  Completed
+                </button>
+              </div>
+            </div>
+            <div class="divide-y divide-gray-100">
+              <div *ngIf="filteredTasks.length === 0" class="text-center text-gray-400 py-8">
+                <i class="fas fa-inbox text-3xl mb-2"></i>
+                <div>No tasks found.</div>
+              </div>
+              <div *ngFor="let task of filteredTasks" class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div class="flex items-start justify-between">
+                  <div class="flex items-start space-x-3">
+                    <div class="mt-1">
+                      <input 
+                        type="checkbox" 
+                        [checked]="task.status === 'completed'" 
+                        (change)="toggleTaskComplete(task)"
+                        class="h-4 w-4 text-[#0F172A] rounded border-gray-300 focus:ring-[#0F172A]">
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-medium text-gray-900" [class.line-through]="task.status === 'completed'">{{ task.title }}</h4>
+                      <p class="text-xs text-gray-500 mt-1">{{ task.description }}</p>
+                      <div class="flex items-center space-x-2 mt-2">
+                        <span [class]="'px-2 py-1 text-xs rounded-full ' + 
+                          (task.priority === 'high' ? 'bg-red-100 text-red-800' : 
+                           task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 
+                           'bg-blue-100 text-blue-800')">
+                          {{ task.priority }}
+                        </span>
+                        <span class="text-xs text-gray-500">Due: {{ task.dueDate }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex space-x-2">
+                    <button class="text-gray-400 hover:text-gray-600" (click)="startEditTask(task)">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+              <button (click)="startAddTask()" class="text-sm text-[#0F172A] hover:text-[#2D78E0] font-medium flex items-center">
+                <i class="fas fa-plus mr-2"></i> Add New Task
+              </button>
+            </div>
+          </div>
+
+          <!-- Activity Feed -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100">
+              <h3 class="font-semibold text-gray-900">Recent Activity</h3>
+            </div>
+            <div class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+              <div *ngFor="let activity of recentActivities" class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                <div class="flex space-x-4">
+                  <div [class]="activity.color + ' h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0'">
+                    <i [class]="activity.icon"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-medium text-gray-900">{{ activity.title }}</h4>
+                    <p class="text-xs text-gray-500 mt-1">{{ activity.description }}</p>
+                    <p class="text-xs text-gray-400 mt-2">{{ activity.time }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+              <a href="#" class="text-sm text-[#0F172A] hover:text-[#2D78E0] font-medium">View All Activity</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Notification Toast -->
+<div *ngIf="notification && notification.show" 
+  class="fixed top-24 right-6 max-w-md transform transition-all duration-300 ease-in-out z-50"
+  [ngClass]="{
+    'translate-y-0 opacity-100': notification.show,
+    'translate-y-12 opacity-0': !notification.show
+  }">
+  <div [class]="'flex items-center p-4 rounded-lg shadow-lg ' + notification.class">
+    <div class="flex-shrink-0 mr-3">
+      <i [class]="notification.icon + ' text-xl'"></i>
+    </div>
+    <div class="flex-1 mr-2">
+      <p class="text-sm font-medium">{{ notification.message }}</p>
+    </div>
+    <button 
+      (click)="notification.show = false"
+      class="flex-shrink-0 text-gray-400 hover:text-gray-600 focus:outline-none">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div *ngIf="isAdding" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative border border-gray-100 transform transition-all duration-300 ease-out">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        
+        <h2 class="text-2xl font-bold text-gray-900">Add New Task</h2>
+      </div>
+      <button 
+        (click)="cancelAddEdit()" 
+        class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+      >
+        <i class="fas fa-times text-sm"></i>
+      </button>
+    </div>
+
+    <form #addTaskForm="ngForm" (ngSubmit)="addTask(addTaskForm.value)" class="space-y-5">
+      <!-- Title Field -->
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-700">Task Title</label>
+        <input 
+          name="title" 
+          ngModel 
+          required 
+          placeholder="Enter task title..."
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 outline-none bg-gray-50/50 hover:bg-white focus:bg-white" 
+        />
+      </div>
+
+      <!-- Description Field -->
+      <div class="space-y-2">
+        <label class="block text-sm font-semibold text-gray-700">Description</label>
+        <textarea 
+          name="description" 
+          ngModel 
+          required 
+          rows="3"
+          placeholder="Describe your task..."
+          class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 outline-none resize-none bg-gray-50/50 hover:bg-white focus:bg-white"
+        ></textarea>
+      </div>
+
+      <!-- Due Date & Priority Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">Due Date</label>
+          <input 
+            type="date" 
+            name="dueDate" 
+            ngModel 
+            required 
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 outline-none bg-gray-50/50 hover:bg-white focus:bg-white" 
+          />
+        </div>
+        
+        <div class="space-y-2">
+          <label class="block text-sm font-semibold text-gray-700">Priority Level</label>
+          <select 
+            name="priority" 
+            ngModel 
+            required 
+            class="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200 outline-none bg-gray-50/50 hover:bg-white focus:bg-white"
+          >
+            <option value="" disabled selected class="text-gray-400">Select priority</option>
+            <option value="high" class="text-red-600">🔴 High Priority</option>
+            <option value="medium" class="text-yellow-600">🟡 Medium Priority</option>
+            <option value="low" class="text-green-600">🟢 Low Priority</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-gray-100">
+        <button 
+          type="button" 
+          (click)="cancelAddEdit()" 
+          class="px-6 py-3 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 focus:bg-gray-200 transition-all duration-200 focus:ring-4 focus:ring-gray-200/50 outline-none"
+        >
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          [disabled]="addTaskForm.invalid" 
+          class="px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:from-blue-700 focus:to-purple-700 disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed transition-all duration-200 focus:ring-4 focus:ring-blue-500/30 outline-none shadow-lg disabled:shadow-none"
+        >
+          <span class="flex items-center justify-center gap-2">
+            <i class="fas fa-plus text-sm"></i>
+            Add Task
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Task Modal -->
+<div *ngIf="isEditing && selectedTask" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+    <h2 class="text-xl font-bold mb-4">Edit Task</h2>
+    <form #editTaskForm="ngForm" (ngSubmit)="updateTask(selectedTask)">
+      <div class="mb-3">
+        <label class="block text-sm font-medium mb-1">Title</label>
+        <input [(ngModel)]="selectedTask.title" name="title" required class="w-full border rounded px-3 py-2" />
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-medium mb-1">Description</label>
+        <textarea [(ngModel)]="selectedTask.description" name="description" required class="w-full border rounded px-3 py-2"></textarea>
+      </div>
+      <div class="mb-3 flex gap-2">
+        <div class="flex-1">
+          <label class="block text-sm font-medium mb-1">Due Date</label>
+          <input type="date" [(ngModel)]="selectedTask.dueDate" name="dueDate" required class="w-full border rounded px-3 py-2" />
+        </div>
+        <div class="flex-1">
+          <label class="block text-sm font-medium mb-1">Priority</label>
+          <select [(ngModel)]="selectedTask.priority" name="priority" required class="w-full border rounded px-3 py-2">
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-between items-center mt-4">
+        <button type="button" (click)="deleteTask(selectedTask.id)" class="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 flex items-center"><i class="fas fa-trash mr-2"></i>Delete</button>
+        <div class="flex gap-2">
+          <button type="button" (click)="cancelAddEdit()" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+          <button type="submit" [disabled]="editTaskForm.invalid" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Save</button>
+        </div>
+      </div>
+    </form>
+    <button (click)="cancelAddEdit()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+  </div>
+</div>
+
+<app-chatbot></app-chatbot>

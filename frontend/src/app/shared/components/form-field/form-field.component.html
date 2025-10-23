@@ -1,0 +1,15 @@
+<div class="form-field">
+  <label [for]="id" class="form-label">{{ label }}</label>
+  <input 
+    [type]="type" 
+    [id]="id" 
+    [placeholder]="placeholder"
+    [(ngModel)]="value"
+    [required]="required"
+    [class.is-invalid]="isInvalid"
+    class="form-input"
+  >
+  <div *ngIf="isInvalid && errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+</div>

@@ -1,0 +1,9 @@
+/* Basic styling for the employee meeting component */
+
+:host {
+  display: block;
+}
+
+h1 {
+  color: #2c7a7b;
+} 

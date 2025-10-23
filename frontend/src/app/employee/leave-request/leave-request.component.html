@@ -1,0 +1,127 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    (logoutEvent)="logout()"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="logout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Leave Request</span>
+    </app-header>
+
+    <!-- Page Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto  bg-orange-50 p-4 lg:p-8">
+      <div class="bg-white rounded-xl shadow-md p-6 max-w-2xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-900 flex items-center mb-6">
+          <i class="fas fa-calendar-alt text-blue-500 mr-3"></i> Submit Leave Request
+        </h2>
+
+        <form (ngSubmit)="submitLeaveRequest()" #leaveForm="ngForm" class="space-y-5">
+          <!-- Leave Type -->
+          <div>
+            <label for="leaveType" class="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
+            <select id="leaveType" name="leaveType" [(ngModel)]="leaveType" required
+                    class="w-full border border-gray-200 rounded-lg px-4 py-2 text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+              <option value="">Select Leave Type</option>
+              <option value="annual">Annual Leave</option>
+              <option value="sick">Sick Leave</option>
+              <option value="paternity">Paternity Leave</option>
+              <option value="maternity">Maternity Leave</option>
+              <option value="unpaid">Unpaid Leave</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Start Date -->
+          <div>
+            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <input type="date" id="startDate" name="startDate" [(ngModel)]="startDate" required
+                   class="w-full border border-gray-200 rounded-lg px-4 py-2 text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+          </div>
+
+          <!-- End Date -->
+          <div>
+            <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <input type="date" id="endDate" name="endDate" [(ngModel)]="endDate" required
+                   class="w-full border border-gray-200 rounded-lg px-4 py-2 text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200">
+          </div>
+
+          <!-- Reason -->
+          <div>
+            <label for="reason" class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+            <textarea id="reason" name="reason" [(ngModel)]="reason" rows="4" placeholder="Reason for leave..." required
+                      class="w-full border border-gray-200 rounded-lg px-4 py-2 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-y"></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="flex justify-end pt-4 border-t border-gray-100">
+            <button type="submit" [disabled]="!leaveForm.valid" 
+                    class="px-6 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed">
+              Submit Request
+            </button>
+          </div>
+        </form>
+
+        <!-- Status Display -->
+        <div *ngIf="requestStatus !== 'idle'" class="mt-8 p-4 rounded-lg text-center"
+             [ngClass]="{
+               'bg-yellow-100 text-yellow-800': requestStatus === 'awaiting approval',
+               'bg-green-100 text-green-800': requestStatus === 'approved',
+               'bg-red-100 text-red-800': requestStatus === 'rejected'
+             }">
+          <p class="font-medium">Request Status: <span class="capitalize">{{ requestStatus }}</span></p>
+          <p *ngIf="requestStatus === 'awaiting approval'" class="text-sm mt-1">Your leave request has been submitted and is awaiting HR approval.</p>
+        </div>
+
+        <!-- User's Leave Requests Table -->
+        <div *ngIf="leaveRequests.length > 0" class="mt-10">
+          <h3 class="text-lg font-bold mb-4 flex items-center"><i class="fas fa-list-alt text-blue-500 mr-2"></i>My Leave Requests</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700">
+                  <th class="px-4 py-2 text-left">Type</th>
+                  <th class="px-4 py-2 text-left">Start</th>
+                  <th class="px-4 py-2 text-left">End</th>
+                  <th class="px-4 py-2 text-left">Status</th>
+                  <th class="px-4 py-2 text-left">Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let req of leaveRequests" class="border-t">
+                  <td class="px-4 py-2">{{ req.leave_type }}</td>
+                  <td class="px-4 py-2">{{ req.start_date }}</td>
+                  <td class="px-4 py-2">{{ req.end_date }}</td>
+                  <td class="px-4 py-2 capitalize">
+                    <span [ngClass]="{
+                      'bg-yellow-100 text-yellow-800 px-2 py-1 rounded': req.status === 'pending' || req.status === 'awaiting approval',
+                      'bg-green-100 text-green-800 px-2 py-1 rounded': req.status === 'approved',
+                      'bg-red-100 text-red-800 px-2 py-1 rounded': req.status === 'rejected'
+                    }">{{ req.status }}</span>
+                  </td>
+                  <td class="px-4 py-2">{{ req.reason }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div> 
+
+<app-chatbot></app-chatbot>

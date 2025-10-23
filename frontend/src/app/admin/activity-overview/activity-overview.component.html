@@ -1,0 +1,243 @@
+<div class="flex h-screen bg-background overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="onLogout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Activity Overview & Analytics</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-background">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Welcome Section -->
+        <div class="mb-8">
+          <div class="bg-gradient-to-r from-primary to-accent rounded-2xl p-6 text-white shadow-xl">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-bold mb-2">Activity Overview</h1>
+                <p class="text-white/90">Monitor and manage all system activities in real-time</p>
+              </div>
+              <div class="hidden md:block">
+                <i class="fas fa-chart-line text-4xl opacity-20"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
+          <!-- Total Activities -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 animate-fade-up">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-blue-100 rounded-xl">
+                <i class="fas fa-chart-bar text-blue-600 text-xl"></i>
+              </div>
+              <span class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Total</span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">{{ activities.length }}</div>
+            <div class="text-sm text-gray-600">Total Activities</div>
+          </div>
+
+          <!-- Completed -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 animate-fade-up" style="animation-delay: 0.1s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-green-100 rounded-xl">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+              </div>
+              <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+{{ getCompletionRate() }}%</span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">{{ completedCount }}</div>
+            <div class="text-sm text-gray-600">Completed</div>
+          </div>
+
+          <!-- Pending -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 animate-fade-up" style="animation-delay: 0.2s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-yellow-100 rounded-xl">
+                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+              </div>
+              <span class="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded-full">Pending</span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">{{ pendingCount }}</div>
+            <div class="text-sm text-gray-600">In Progress</div>
+          </div>
+
+          <!-- User Activities -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 animate-fade-up" style="animation-delay: 0.3s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-purple-100 rounded-xl">
+                <i class="fas fa-users text-purple-600 text-xl"></i>
+              </div>
+              <span class="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">Users</span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">{{ getActivityTypeCount('user') }}</div>
+            <div class="text-sm text-gray-600">User Activities</div>
+          </div>
+
+          <!-- Task Activities -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 animate-fade-up" style="animation-delay: 0.4s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-orange-100 rounded-xl">
+                <i class="fas fa-tasks text-orange-600 text-xl"></i>
+              </div>
+              <span class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded-full">Tasks</span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">{{ getActivityTypeCount('task') }}</div>
+            <div class="text-sm text-gray-600">Task Activities</div>
+          </div>
+
+          <!-- System Activities -->
+          <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 animate-fade-up" style="animation-delay: 0.5s">
+            <div class="flex items-center justify-between mb-4">
+              <div class="p-3 bg-teal-100 rounded-xl">
+                <i class="fas fa-cog text-teal-600 text-xl"></i>
+              </div>
+              <span class="text-xs font-medium text-teal-600 bg-teal-50 px-2 py-1 rounded-full">System</span>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 mb-1">{{ getActivityTypeCount('system') }}</div>
+            <div class="text-sm text-gray-600">System Events</div>
+          </div>
+        </div>
+
+        <!-- Activity Filters and Actions -->
+        <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 mb-8">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex flex-col sm:flex-row gap-4">
+              <div class="relative">
+                <select [(ngModel)]="selectedFilter" (change)="applyFilter()" 
+                        class="appearance-none bg-gray-50 border border-gray-300 rounded-xl px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="all">All Activities</option>
+                  <option value="completed">Completed</option>
+                  <option value="pending">Pending</option>
+                  <option value="user">User Activities</option>
+                  <option value="task">Task Activities</option>
+                  <option value="system">System Activities</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
+              </div>
+              <div class="relative">
+                <input type="text" [(ngModel)]="searchTerm" (input)="applySearch()" 
+                       placeholder="Search activities..." 
+                       class="bg-gray-50 border border-gray-300 rounded-xl px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <button (click)="refreshActivities()" 
+                      class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-200 flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+              </button>
+              <button (click)="markAllCompleted()" 
+                      class="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg flex items-center gap-2">
+                <i class="fas fa-check-double"></i>
+                Mark All Complete
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activities List -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
+          <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+              <h2 class="text-xl font-bold text-gray-900">Recent Activities</h2>
+              <span class="text-sm text-gray-500">{{ filteredActivities.length }} activities</span>
+            </div>
+          </div>
+          
+          <div class="divide-y divide-gray-100">
+            <div *ngFor="let activity of filteredActivities; let i = index" 
+                 class="p-6 hover:bg-gray-50 transition-colors duration-200 animate-fade-up"
+                 [style.animation-delay.ms]="i * 50">
+              <div class="flex items-start gap-4">
+                <!-- Activity Icon -->
+                <div class="flex-shrink-0">
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
+                       [ngClass]="getActivityColor(activity.activity_type)">
+                    <i [class]="getActivityIcon(activity.activity_type)" class="text-lg"></i>
+                  </div>
+                </div>
+                
+                <!-- Activity Content -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-3 mb-2">
+                    <span class="font-semibold text-gray-900">{{ getUserDisplayName(activity) }}</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800': activity.status === 'completed',
+                            'bg-yellow-100 text-yellow-800': activity.status === 'pending',
+                            'bg-red-100 text-red-800': activity.status === 'failed',
+                            'bg-gray-100 text-gray-800': activity.status === 'in_progress'
+                          }">
+                      <span class="w-1.5 h-1.5 rounded-full mr-1.5"
+                            [ngClass]="{
+                              'bg-green-400': activity.status === 'completed',
+                              'bg-yellow-400': activity.status === 'pending',
+                              'bg-red-400': activity.status === 'failed',
+                              'bg-gray-400': activity.status === 'in_progress'
+                            }"></span>
+                      {{ activity.status | titlecase }}
+                    </span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ activity.activity_type | titlecase }}
+                    </span>
+                  </div>
+                  
+                  <div class="text-gray-900 font-medium mb-1">{{ activity.action }}</div>
+                  <div *ngIf="activity.description" class="text-gray-600 text-sm mb-2">{{ activity.description }}</div>
+                  
+                  <div class="flex items-center gap-4 text-xs text-gray-500">
+                    <span class="flex items-center gap-1">
+                      <i class="fas fa-clock"></i>
+                      {{ activity.date | date:'MMM d, y, h:mm a' }}
+                    </span>
+                    <span *ngIf="activity.user_name" class="flex items-center gap-1">
+                      <i class="fas fa-user"></i>
+                      {{ activity.user_name }}
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Action Button -->
+                <div class="flex-shrink-0">
+                  <button *ngIf="activity.status === 'pending'" 
+                          (click)="markActivityCompleted(activity)"
+                          class="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                          title="Mark as completed">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div *ngIf="filteredActivities.length === 0" class="p-12 text-center">
+              <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-inbox text-gray-400 text-2xl"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No activities found</h3>
+              <p class="text-gray-500">Try adjusting your filters or search terms.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

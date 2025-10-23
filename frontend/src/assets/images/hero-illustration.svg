@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>HR Management Illustration</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#f28d00" offset="0%"></stop>
+            <stop stop-color="#f28d00" stop-opacity="0.5" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#2e4957" offset="0%"></stop>
+            <stop stop-color="#167a87" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="HR-Illustration" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background Elements -->
+        <circle id="Circle1" fill="url(#linearGradient-1)" opacity="0.3" cx="600" cy="150" r="100"></circle>
+        <circle id="Circle2" fill="url(#linearGradient-2)" opacity="0.2" cx="200" cy="450" r="120"></circle>
+        
+        <!-- Main Dashboard UI -->
+        <rect id="Dashboard" fill="#FFFFFF" x="150" y="100" width="500" height="350" rx="10"></rect>
+        <rect id="Header" fill="url(#linearGradient-2)" x="150" y="100" width="500" height="60" rx="10 10 0 0"></rect>
+        <text id="Dashboard-Title" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#FFFFFF">
+            <tspan x="180" y="138">TE Connect Dashboard</tspan>
+        </text>
+        
+        <!-- Sidebar -->
+        <rect id="Sidebar" fill="#F5F7FA" x="150" y="160" width="120" height="290"></rect>
+        <rect id="Menu-Item-1" fill="url(#linearGradient-1)" x="160" y="180" width="100" height="40" rx="5"></rect>
+        <rect id="Menu-Item-2" fill="#FFFFFF" stroke="#E1E4E8" x="160" y="230" width="100" height="40" rx="5"></rect>
+        <rect id="Menu-Item-3" fill="#FFFFFF" stroke="#E1E4E8" x="160" y="280" width="100" height="40" rx="5"></rect>
+        <rect id="Menu-Item-4" fill="#FFFFFF" stroke="#E1E4E8" x="160" y="330" width="100" height="40" rx="5"></rect>
+        
+        <!-- Content Area -->
+        <rect id="Stat-Card-1" fill="#FFFFFF" stroke="#E1E4E8" x="290" y="180" width="160" height="100" rx="5"></rect>
+        <rect id="Stat-Card-2" fill="#FFFFFF" stroke="#E1E4E8" x="470" y="180" width="160" height="100" rx="5"></rect>
+        <rect id="Stat-Card-1-Header" fill="url(#linearGradient-1)" x="290" y="180" width="160" height="30" rx="5 5 0 0"></rect>
+        <rect id="Stat-Card-2-Header" fill="url(#linearGradient-2)" x="470" y="180" width="160" height="30" rx="5 5 0 0"></rect>
+        
+        <!-- Chart Area -->
+        <rect id="Chart-Area" fill="#FFFFFF" stroke="#E1E4E8" x="290" y="300" width="340" height="130" rx="5"></rect>
+        <path id="Chart-Line" d="M310,380 L340,350 L380,370 L420,330 L460,340 L500,310 L540,320 L580,290 L620,300" stroke="url(#linearGradient-1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>
+        <circle id="Chart-Point-1" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="340" cy="350" r="5"></circle>
+        <circle id="Chart-Point-2" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="380" cy="370" r="5"></circle>
+        <circle id="Chart-Point-3" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="420" cy="330" r="5"></circle>
+        <circle id="Chart-Point-4" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="460" cy="340" r="5"></circle>
+        <circle id="Chart-Point-5" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="500" cy="310" r="5"></circle>
+        <circle id="Chart-Point-6" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="540" cy="320" r="5"></circle>
+        <circle id="Chart-Point-7" fill="#FFFFFF" stroke="url(#linearGradient-1)" stroke-width="2" cx="580" cy="290" r="5"></circle>
+        
+        <!-- People Icons -->
+        <circle id="Person-1" fill="#2e4957" cx="320" cy="230" r="15"></circle>
+        <circle id="Person-2" fill="#f28d00" cx="360" cy="230" r="15"></circle>
+        <circle id="Person-3" fill="#167a87" cx="400" cy="230" r="15"></circle>
+        
+        <!-- Decorative Elements -->
+        <path id="Decorative-Shape-1" d="M650,450 C680,430 700,470 730,450" stroke="#f28d00" stroke-width="3" stroke-linecap="round"></path>
+        <path id="Decorative-Shape-2" d="M100,200 C130,180 150,220 180,200" stroke="#167a87" stroke-width="3" stroke-linecap="round"></path>
+        <circle id="Decorative-Circle-1" fill="#f28d00" opacity="0.5" cx="700" cy="350" r="10"></circle>
+        <circle id="Decorative-Circle-2" fill="#167a87" opacity="0.5" cx="120" cy="300" r="15"></circle>
+    </g>
+</svg>

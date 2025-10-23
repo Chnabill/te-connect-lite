@@ -1,0 +1,217 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    (logoutEvent)="logout()"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="logout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Leave Management</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto  bg-orange-50">
+      <div class="min-h-screen p-4 lg:p-8">
+        <!-- Filters -->
+        <div class="mb-6 flex flex-wrap gap-4">
+          <button 
+            (click)="setStatusFilter('all')"
+            [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-colors ' + 
+                    (statusFilter === 'all' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+            All Requests
+          </button>
+          <button 
+            (click)="setStatusFilter('pending')"
+            [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-colors ' + 
+                    (statusFilter === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+            Pending
+          </button>
+          <button 
+            (click)="setStatusFilter('approved')"
+            [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-colors ' + 
+                    (statusFilter === 'approved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+            Approved
+          </button>
+          <button 
+            (click)="setStatusFilter('rejected')"
+            [class]="'px-4 py-2 rounded-lg text-sm font-medium transition-colors ' + 
+                    (statusFilter === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700 hover:bg-gray-200')">
+            Rejected
+          </button>
+        </div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="flex items-center justify-center min-h-[400px]">
+          <div class="loading-spinner"></div>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="error" class="text-center py-8">
+          <div class="text-red-500 mb-4">
+            <i class="fas fa-exclamation-circle text-4xl"></i>
+          </div>
+          <p class="text-lg font-medium text-gray-900">{{ error }}</p>
+          <button (click)="loadLeaveRequests()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            Try Again
+          </button>
+        </div>
+
+        <!-- Leave Requests Table -->
+        <div *ngIf="!loading && !error" class="bg-white rounded-xl shadow-md overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let request of filteredRequests" class="hover:bg-gray-50 transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="h-10 w-10 rounded-full bg-[#0F172A] flex items-center justify-center text-white font-semibold">
+                        {{ request.employeeName.charAt(0) }}
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">{{ request.employeeName }}</div>
+                        <div class="text-sm text-gray-500">{{ request.employeeId }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ request.leaveType }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ request.startDate }} to {{ request.endDate }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ request.department }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span [class]="'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ' + 
+                      (request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                       request.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                       'bg-red-100 text-red-800')">
+                      {{ request.status | titlecase }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                    <button 
+                      (click)="viewRequestDetails(request)"
+                      class="text-blue-600 hover:text-blue-900 transition-colors"
+                      title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button 
+                      *ngIf="request.status === 'pending'"
+                      (click)="approveRequest(request)"
+                      class="text-green-600 hover:text-green-900 transition-colors"
+                      title="Approve">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button 
+                      *ngIf="request.status === 'pending'"
+                      (click)="rejectRequest(request)"
+                      class="text-red-600 hover:text-red-900 transition-colors"
+                      title="Reject">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Request Details Modal -->
+<div *ngIf="selectedRequest" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
+    <button 
+      (click)="closeRequestDetails()"
+      class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+      <i class="fas fa-times"></i>
+    </button>
+    
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Leave Request Details</h2>
+    
+    <div class="space-y-4">
+      <div class="flex items-center space-x-4">
+        <div class="h-12 w-12 rounded-full bg-[#0F172A] flex items-center justify-center text-white font-semibold text-lg">
+          {{ selectedRequest.employeeName.charAt(0) }}
+        </div>
+        <div>
+          <h3 class="text-lg font-medium text-gray-900">{{ selectedRequest.employeeName }}</h3>
+          <p class="text-sm text-gray-500">{{ selectedRequest.employeeId }}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <p class="text-sm font-medium text-gray-500">Leave Type</p>
+          <p class="text-base text-gray-900">{{ selectedRequest.leaveType }}</p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Department</p>
+          <p class="text-base text-gray-900">{{ selectedRequest.department }}</p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Start Date</p>
+          <p class="text-base text-gray-900">{{ selectedRequest.startDate }}</p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">End Date</p>
+          <p class="text-base text-gray-900">{{ selectedRequest.endDate }}</p>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Status</p>
+          <span [class]="'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ' + 
+            (selectedRequest.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+             selectedRequest.status === 'approved' ? 'bg-green-100 text-green-800' : 
+             'bg-red-100 text-red-800')">
+            {{ selectedRequest.status | titlecase }}
+          </span>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">Submitted Date</p>
+          <p class="text-base text-gray-900">{{ selectedRequest.submittedDate }}</p>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-sm font-medium text-gray-500">Reason</p>
+        <p class="text-base text-gray-900 mt-1">{{ selectedRequest.reason }}</p>
+      </div>
+
+      <div *ngIf="selectedRequest.status === 'pending'" class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <button 
+          (click)="rejectRequest(selectedRequest)"
+          class="px-4 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 transition-colors">
+          Reject
+        </button>
+        <button 
+          (click)="approveRequest(selectedRequest)"
+          class="px-4 py-2 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors">
+          Approve
+        </button>
+      </div>
+    </div>
+  </div>
+</div> 

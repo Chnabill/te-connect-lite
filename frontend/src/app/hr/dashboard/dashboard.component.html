@@ -1,0 +1,311 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <div 
+    class="fixed inset-y-0 left-0 z-50 w-64 bg-[#e67e22]/95 shadow-xl transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0"
+    [class.w-16]="!sidebarOpen"
+    [class.w-64]="sidebarOpen"
+    [class.translate-x-0]="sidebarOpen"
+    [class.-translate-x-full]="!sidebarOpen && isMobile">
+    
+    <!-- Sidebar Toggle Button -->
+    <button 
+      (click)="toggleSidebar()"
+      class="absolute top-1/2 -right-3 transform -translate-y-1/2 z-50 flex items-center justify-center w-6 h-6 rounded-full bg-white text-[#0F172A] hover:bg-gray-100 transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-white/50"
+      style="outline: none !important; outline-offset: 0 !important;">
+      <i [class]="sidebarOpen ? 'fas fa-angle-double-left text-sm' : 'fas fa-angle-double-right text-sm'"></i>
+    </button>
+
+    <!-- Sidebar Header -->
+    <div class="flex items-center justify-center h-16 border-b border-gray-200">
+      <img 
+        src="assets/images/TE_Connectivity_logo.svg.png" 
+        alt="TE Connectivity Logo" 
+        [ngClass]="sidebarOpen ? 'h-14' : 'h-8'"
+      />
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="mt-6 px-3">
+      <div class="space-y-2">
+        <a 
+          *ngFor="let item of sidebarItems"
+          (click)="setActiveSection(item.id)"
+          [class]="'flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors cursor-pointer ' + 
+                   (activeSection === item.id ? 'bg-white/20 text-white' : 'text-white/80 hover:bg-white/10 hover:text-white')">
+          <i [class]="item.icon + ' text-lg' + (sidebarOpen ? ' mr-3' : '')"></i>
+          <span [class.hidden]="!sidebarOpen">{{ item.name }}</span>
+          <span *ngIf="item.badge && sidebarOpen" [class]="'ml-auto px-2 py-1 text-xs rounded-full ' + item.badgeClass">
+            {{ item.badge }}
+          </span>
+        </a>
+      </div>
+
+      <!-- Logout Button -->
+      <div class="absolute bottom-6 left-0 right-0 px-3">
+        <button 
+          (click)="logout()"
+          class="w-full group relative overflow-hidden flex items-center justify-center px-4 py-3  hover:bg-white/20 text-white rounded-xl transition-all duration-300"
+          [class.justify-center]="!sidebarOpen">
+          <div class="absolute inset-0 bg-gradient-to-r from-white/0 to-white/0 group-hover:from-white/5 group-hover:to-white/5 transition-all duration-300"></div>
+          <i class="fas fa-sign-out-alt text-lg transform group-hover:scale-110 transition-transform duration-300 absolute opacity-100 group-hover:opacity-0" [class.mr-3]="sidebarOpen"></i>
+          <i class="fas fa-arrow-right-from-bracket text-lg transform group-hover:scale-110 transition-transform duration-300 absolute opacity-0 group-hover:opacity-100" [class.mr-3]="sidebarOpen"></i>
+          <span [class.hidden]="!sidebarOpen" class="font-medium ml-6">Sign Out</span>
+          <div class="absolute inset-0 bg-gradient-to-r from-white/0 to-white/0 group-hover:from-white/5 group-hover:to-white/5 transition-all duration-300"></div>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Sidebar Overlay for Mobile -->
+  <div 
+    *ngIf="sidebarOpen" 
+    class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+    (click)="toggleSidebar()">
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+    (toggleSidebarClicked)="toggleSidebar()"
+    (logoutClicked)="logout()"
+>
+  <span section-title>{{ getSectionTitle() }}</span>
+  <span subsection-title>{{ getCurrentSubsection() }}</span>
+</app-header>
+
+    <!-- Dashboard Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto ">
+      <div class="min-h-screen bg-orange-50 p-4 lg:p-8">
+        
+        <!-- KPI Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div 
+            *ngFor="let kpi of kpiData; let i = index"
+            class="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300"
+            [style.animation-delay]="(i * 0.1) + 's'">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-gray-600 text-sm font-medium mb-2">{{ kpi.title }}</h3>
+                <p class="text-3xl font-bold text-gray-900 mb-1">{{ kpi.value }}</p>
+                <p [class]="'text-sm font-medium ' + kpi.changeClass">
+                  <i [class]="kpi.changeIcon + ' mr-1'"></i>{{ kpi.change }}
+                </p>
+              </div>
+              <div [class]="'p-4 rounded-full ' + kpi.bgColor">
+                <i [class]="kpi.icon + ' text-2xl ' + kpi.iconColor"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <!-- Recent Applications -->
+          <div class="xl:col-span-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                  <i class="fas fa-file-alt mr-3 text-blue-600"></i>
+                  Recent Applications
+                </h2>
+                <button 
+                  (click)="viewAllApplications()"
+                  class="text-blue-600 hover:text-blue-800 font-semibold transition-colors">
+                  View All <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr 
+                    *ngFor="let application of recentApplications"
+                    class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div [class]="'h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold ' + application.avatarColor">
+                          {{ application.initials }}
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">{{ application.name }}</div>
+                          <div class="text-sm text-gray-500">{{ application.email }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ application.position }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ application.date }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span [class]="'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ' + application.statusClass">
+                        <span [class]="'w-2 h-2 rounded-full mr-2 ' + application.statusDotClass"></span>
+                        {{ application.status }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                      <button 
+                        (click)="viewApplication(application.id)"
+                        class="text-blue-600 hover:text-blue-900 transition-colors"
+                        title="View Application">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button 
+                        *ngIf="application.status !== 'Rejected'"
+                        (click)="approveApplication(application.id)"
+                        class="text-green-600 hover:text-green-900 transition-colors"
+                        title="Approve">
+                        <i class="fas fa-check"></i>
+                      </button>
+                      <button 
+                        *ngIf="application.status === 'Review'"
+                        (click)="rejectApplication(application.id)"
+                        class="text-red-600 hover:text-red-900 transition-colors"
+                        title="Reject">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right Sidebar Content -->
+          <div class="space-y-6">
+            <!-- Upcoming Interviews -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden">
+              <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                  <i class="fas fa-calendar-check mr-3 text-green-600"></i>
+                  Upcoming Interviews
+                </h2>
+              </div>
+              
+              <div class="p-6 space-y-4">
+                <div 
+                  *ngFor="let interview of upcomingInterviews"
+                  class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div class="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 class="font-semibold text-gray-900">{{ interview.candidateName }}</h3>
+                      <p class="text-sm text-gray-600">{{ interview.position }}</p>
+                    </div>
+                    <span [class]="'text-xs px-2 py-1 rounded-full ' + interview.dateClass">
+                      {{ interview.dateLabel }}
+                    </span>
+                  </div>
+                  <p class="text-sm font-medium text-gray-700">
+                    <i class="fas fa-clock mr-1"></i>{{ interview.time }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden">
+              <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                  <i class="fas fa-bolt mr-3 text-yellow-600"></i>
+                  Quick Actions
+                </h2>
+              </div>
+              
+              <div class="p-6 space-y-3">
+                <button 
+                  *ngFor="let action of quickActions"
+                  (click)="executeQuickAction(action.id)"
+                  [class]="'w-full text-white py-3 px-4 rounded-lg font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center ' + action.bgClass">
+                  <i [class]="action.icon + ' mr-2'"></i>{{ action.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <!-- Department Distribution -->
+          <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">Department Distribution</h3>
+              <i class="fas fa-building text-2xl text-indigo-600"></i>
+            </div>
+            <div class="space-y-3">
+              <div *ngFor="let dept of departmentData">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">{{ dept.name }}</span>
+                  <span class="text-sm font-semibold">{{ dept.percentage }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    [class]="dept.color + ' h-2 rounded-full'"
+                    [style.width]="dept.percentage + '%'"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Tasks -->
+          <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">Pending Tasks</h3>
+              <i class="fas fa-tasks text-2xl text-orange-600"></i>
+            </div>
+            <div class="space-y-3">
+              <div 
+                *ngFor="let task of pendingTasks"
+                [class]="'flex items-center justify-between p-3 rounded-lg ' + task.bgClass">
+                <span class="text-sm text-gray-700">{{ task.name }}</span>
+                <span [class]="'text-xs px-2 py-1 rounded-full ' + task.badgeClass">
+                  {{ task.count }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-xl hover:transform hover:-translate-y-2 transition-all duration-300 animate-fade-in">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+              <i class="fas fa-history text-2xl text-green-600"></i>
+            </div>
+            <div class="space-y-4">
+              <div 
+                *ngFor="let activity of recentActivities"
+                class="flex items-start space-x-3">
+                <div [class]="'w-2 h-2 rounded-full mt-2 ' + activity.dotColor"></div>
+                <div>
+                  <p class="text-sm text-gray-900 font-medium">{{ activity.message }}</p>
+                  <p class="text-xs text-gray-500">{{ activity.time }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Notification Toast -->
+  <div 
+    *ngIf="notification"
+    [class]="'fixed top-4 right-4 z-50 px-6 py-4 rounded-lg shadow-lg transform transition-transform duration-300 ' + notification.class"
+    [ngClass]="{'translate-x-0': notification.show, 'translate-x-full': !notification.show}">
+    <div class="flex items-center">
+      <i [class]="notification.icon + ' mr-2'"></i>
+      <span>{{ notification.message }}</span>
+    </div>
+  </div>
+</div>
+
+
+

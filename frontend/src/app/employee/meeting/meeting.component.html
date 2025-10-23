@@ -1,0 +1,346 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    (logoutEvent)="logout()"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="logout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Meetings</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-orange-50">
+      <div class="min-h-screen p-4 lg:p-8">
+        <!-- Action Bar -->
+        <div class="flex flex-wrap gap-4 mb-6 items-center">
+          <button (click)="toggleScheduleForm()" class="px-6 py-2 bg-teal-500 text-white rounded-lg shadow hover:bg-teal-700 transition">
+            <i class="fas fa-plus mr-2"></i> Schedule Meeting
+          </button>
+          <button (click)="toggleViewMode()" class="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 transition">
+            <i [class]="viewMode === 'list' ? 'fas fa-th' : 'fas fa-list'"></i>
+            {{ viewMode === 'list' ? 'Grid View' : 'List View' }}
+          </button>
+          <div class="flex-1"></div>
+          <input type="text" [(ngModel)]="searchQuery" (input)="filterMeetings()" placeholder="Search meetings..." class="px-4 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-blue-500 w-64">
+        </div>
+
+        <!-- Schedule Meeting Form -->
+        <div *ngIf="showScheduleForm" class="mb-8 bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+          <h2 class="text-2xl font-bold mb-6 text-emerald-700 flex items-center">
+            <i class="fas fa-calendar-plus mr-3 text-emerald-500"></i>
+            {{ editingMeetingId ? 'Edit Meeting' : 'Schedule New Meeting' }}
+          </h2>
+          <form (ngSubmit)="submitScheduleMeeting()" #meetingForm="ngForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Title</label>
+                <input type="text" [(ngModel)]="newMeeting.title" name="title" required class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Date</label>
+                <input type="date" [(ngModel)]="newMeeting.date" name="date" required class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Time</label>
+                <input type="time" [(ngModel)]="newMeeting.time" name="time" required class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Participants</label>
+                <div class="flex flex-wrap gap-2 mb-2">
+                  <span *ngFor="let user of selectedParticipants" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full flex items-center">
+                    {{ user.full_name }}
+                    <button type="button" (click)="removeParticipant(user)" class="ml-2 text-red-500 hover:text-red-700 focus:outline-none">&times;</button>
+                  </span>
+                </div>
+                <input type="text"
+                       [formControl]="participantCtrl"
+                       placeholder="Type to search users..."
+                       class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+                <ul *ngIf="participantSuggestions.length" class="bg-white border border-blue-200 rounded shadow mt-1 max-h-40 overflow-auto z-10 relative">
+                  <li *ngFor="let user of participantSuggestions"
+                      (click)="addParticipant(user)"
+                      class="px-3 py-2 hover:bg-blue-100 cursor-pointer flex items-center">
+                    <img *ngIf="user.user_image" [src]="user.user_image" alt="" class="w-6 h-6 rounded-full mr-2">
+                    <span>{{ user.full_name }} <span class="text-xs text-gray-400">({{ user.email }})</span></span>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Priority</label>
+                <select [(ngModel)]="newMeeting.priority" name="priority" class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Room Number</label>
+                <select [(ngModel)]="newMeeting.room_number" name="room_number" class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+                  <option value="">Select a room</option>
+                  <option value="101">101</option>
+                  <option value="102">102</option>
+                  <option value="201">201</option>
+                  <option value="202">202</option>
+                  <option value="301">301</option>
+                  <option value="302">302</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Duration (minutes)</label>
+                <input type="number" [(ngModel)]="newMeeting.duration" name="duration" min="1" class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-semibold mb-2 text-gray-700">Description</label>
+                <textarea [(ngModel)]="newMeeting.description" name="description" rows="2" class="w-full rounded-lg border border-blue-200 focus:border-blue-500 focus:ring-blue-500 px-4 py-2 shadow-sm"></textarea>
+              </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-8">
+              <button type="button" (click)="toggleScheduleForm()" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 shadow">Cancel</button>
+              <button type="submit" class="px-5 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-500 shadow">{{ editingMeetingId ? 'Update' : 'Schedule' }}</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Calendar View -->
+        <div class="mb-8">
+          <!-- Header with improved styling and modern look -->
+          <div class="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border bg-teal-100">
+            <h3 class="text-xl font-bold text-teal-700 flex items-center">
+              <i class="fas fa-calendar-alt mr-3 text-teal-700"></i>
+              Calendar
+            </h3>
+            <div class="flex items-center space-x-4">
+              <button (click)="previousMonth()" 
+                      class="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border border-gray-200">
+                <i class="fas fa-chevron-left text-gray-600"></i>
+              </button>
+              <span class="font-semibold text-lg text-gray-800 min-w-[140px] text-center">
+                {{ monthNames[currentMonth] }} {{ currentYear }}
+              </span>
+              <button (click)="nextMonth()" 
+                      class="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:bg-blue-50 transition-all duration-200 border border-gray-200">
+                <i class="fas fa-chevron-right text-gray-600"></i>
+              </button>
+            </div>
+          </div>
+        
+          <!-- Calendar Grid with enhanced styling -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <!-- Day headers -->
+            <div class="grid grid-cols-7 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <div *ngFor="let day of ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']" 
+                   class="text-center font-semibold text-gray-700 py-3 text-sm uppercase tracking-wide border-r border-gray-200 last:border-r-0">
+                {{ day }}
+              </div>
+            </div>
+        
+            <!-- Calendar days: always 7 columns, wrap weeks -->
+            <div class="grid grid-cols-7 gap-0 w-full max-w-full">
+              <div *ngFor="let day of calendarDays"
+                   class="h-24 flex flex-col items-center justify-start text-sm border-r border-b border-gray-100 relative group hover:bg-gray-50"
+                   [ngClass]="{
+                     'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg': day.isToday,
+                     'bg-gradient-to-br from-green-50 to-green-100 text-green-800': day.hasMeeting && !day.isToday,
+                     'bg-white text-gray-700 hover:bg-blue-50': !day.hasMeeting && !day.isToday && day.day > 0,
+                     'bg-gray-50 text-gray-400': day.day <= 0
+                   }"
+                   (click)="day.day > 0 && null"
+                   [title]="day.meetingCount ? (day.meetingCount + ' meeting(s)') : ''"
+              >
+                <span *ngIf="day.day > 0" class="text-lg font-medium" [ngClass]="{'text-blue-600': day.isToday, 'text-gray-700': !day.isToday}">
+                  {{ day.day }}
+                </span>
+                <ng-container *ngIf="day.day > 0 && getMeetingsForDateObj(day.date).length">
+                  <ul class="mt-1 w-full px-1 flex flex-col gap-1">
+                    <li *ngFor="let m of getMeetingsForDateObj(day.date)"
+                        class="truncate text-xs font-medium max-w-full cursor-pointer"
+                        [ngClass]="{
+                          'bg-white bg-opacity-30 text-white border border-white': day.isToday,
+                          'bg-emerald-100 text-emerald-800 border border-emerald-200': !day.isToday
+                        }"
+                        style="border-radius: 9999px; padding: 2px 10px; display: inline-block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"
+                        [title]="m.title">
+                      <i class="fas fa-calendar mr-1 text-xs"></i>{{ m.title }}
+                    </li>
+                  </ul>
+                </ng-container>
+                <div *ngIf="day.meetingCount" class="absolute bottom-1 right-1">
+                  <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white rounded-full"
+                        [ngClass]="{
+                          'bg-white text-blue-600': day.isToday,
+                          'bg-green-500': !day.isToday
+                        }">
+                    {{ day.meetingCount }}
+                  </span>
+                </div>
+                <div *ngIf="day.hasMeeting && !day.meetingCount" 
+                     class="absolute bottom-2 w-2 h-2 rounded-full"
+                     [ngClass]="{
+                       'bg-white': day.isToday,
+                       'bg-green-500': !day.isToday
+                     }">
+                </div>
+                <div *ngIf="day.isToday" 
+                     class="absolute inset-0 rounded-lg ">
+                </div>
+              </div>
+            </div>
+          </div>
+        
+          <!-- Legend -->
+          <div class="flex items-center justify-center mt-4 space-x-6 text-sm text-gray-600">
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded mr-2"></div>
+              <span>Today</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded mr-2"></div>
+              <span>Has Meetings</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
+              <span>Meeting Count</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meeting List/Grid -->
+        <div *ngIf="viewMode === 'list'">
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <table class="w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Participants</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th class="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let meeting of paginatedMeetings" class="hover:bg-gray-50 transition">
+                  <td class="px-6 py-4 font-medium text-gray-900">{{ meeting.title }}</td>
+                  <td class="px-6 py-4">{{ meeting.date }}</td>
+                  <td class="px-6 py-4">{{ getParticipantNames(meeting.participants) }}</td>
+                  <td class="px-6 py-4">
+                    <span [ngClass]="meeting.dateClass" class="inline-block px-3 py-1 rounded-full text-xs font-medium">
+                      {{ meeting.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 space-x-2">
+                    <button (click)="viewMeeting(meeting.id)" class="text-blue-600 hover:text-blue-900" title="View"><i class="fas fa-eye"></i></button>
+                    <button (click)="editMeeting(meeting.id)" class="text-yellow-600 hover:text-yellow-900" title="Edit"><i class="fas fa-edit"></i></button>
+                    <button (click)="cancelMeeting(meeting.id)" class="text-red-600 hover:text-red-900" title="Cancel"><i class="fas fa-trash"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <!-- Pagination Controls -->
+            <div class="flex justify-center items-center gap-2 py-4">
+              <button (click)="prevPage()" [disabled]="currentPage === 1" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Prev</button>
+              <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+                <button (click)="goToPage(i+1)" [class.bg-blue-600]="currentPage === (i+1)" [class.text-white]="currentPage === (i+1)" class="px-3 py-1 rounded bg-gray-100 hover:bg-blue-200 mx-1" [disabled]="currentPage === (i+1)">{{ i+1 }}</button>
+              </ng-container>
+              <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Next</button>
+            </div>
+            <!-- End Pagination Controls -->
+          </div>
+        </div>
+
+        <div *ngIf="viewMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let meeting of filteredMeetings" class="bg-white rounded-xl shadow-lg p-6 border-l-4" [ngClass]="getPriorityColor(meeting.priority!)">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="text-lg font-bold">{{ meeting.title }}</h4>
+              <span [ngClass]="meeting.dateClass" class="inline-block px-3 py-1 rounded-full text-xs font-medium">
+                {{ meeting.status }}
+              </span>
+            </div>
+            <div class="text-gray-500 text-sm mb-2">
+              <i class="fas fa-calendar-alt mr-1"></i> {{ meeting.date }} &nbsp;
+              <i class="fas fa-clock mr-1"></i> {{ meeting.time }}
+            </div>
+            <div class="mb-2">
+              <span class="font-medium">Participants:</span>
+              <span>{{ getParticipantNames(meeting.participants) }}</span>
+            </div>
+            <div class="mb-2">
+              <span class="font-medium">Location:</span>
+              <span>{{ meeting.room_number }}</span>
+            </div>
+            <div class="mb-2">
+              <span class="font-medium">Priority:</span>
+              <i [class]="getPriorityIcon(meeting.priority!)" class="ml-1"></i>
+            </div>
+            <div class="flex gap-2 mt-4">
+              <button (click)="viewMeeting(meeting.id)" class="px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition">View</button>
+              <button (click)="editMeeting(meeting.id)" class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition">Edit</button>
+              <button (click)="cancelMeeting(meeting.id)" class="px-3 py-1 bg-red-100 text-red-800 rounded hover:bg-red-200 transition">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="filteredMeetings.length === 0">No meetings found.</div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Meeting Details Modal -->
+<div *ngIf="showScheduleModal && selectedMeeting" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+  <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg relative border border-blue-200">
+    <button (click)="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+    <h2 class="text-2xl font-bold mb-4 text-blue-700 flex items-center">
+      <i class="fas fa-calendar-alt mr-3 text-blue-500"></i>
+      Meeting Details
+    </h2>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Title:</span>
+      <span class="ml-2">{{ selectedMeeting.title }}</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Date:</span>
+      <span class="ml-2">{{ selectedMeeting.date }}</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Time:</span>
+      <span class="ml-2">{{ selectedMeeting.time }}</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Participants:</span>
+      <span class="ml-2">{{ getParticipantNames(selectedMeeting.participants) }}</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Room Number:</span>
+      <span class="ml-2">{{ selectedMeeting.room_number }}</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Priority:</span>
+      <span class="ml-2 capitalize">{{ selectedMeeting.priority }}</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Duration:</span>
+      <span class="ml-2">{{ selectedMeeting.duration }} minutes</span>
+    </div>
+    <div class="mb-4">
+      <span class="font-semibold text-gray-700">Description:</span>
+      <span class="ml-2">{{ selectedMeeting.description }}</span>
+    </div>
+    <div class="flex justify-end mt-6">
+      <button (click)="closeModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow">Close</button>
+    </div>
+  </div>
+</div>
+<!-- End Meeting Details Modal -->

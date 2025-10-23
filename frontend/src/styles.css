@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-[#F8F9F6] transition-colors duration-300;
+  font-family: 'Inter', sans-serif;
+
+}
+
+body.dark {
+  @apply bg-gray-800 text-gray-200;
+}
+
+body.dark .bg-white\/95 {
+  @apply bg-gray-900/95;
+}
+
+body.dark .text-gray-700 {
+  @apply text-gray-300;
+}
+
+body.dark .text-gray-600 {
+  @apply text-gray-400;
+}
+
+body.dark .bg-gray-50 {
+  @apply bg-gray-800;
+}
+
+body.dark .border-gray-200 {
+  @apply border-gray-700;
+}

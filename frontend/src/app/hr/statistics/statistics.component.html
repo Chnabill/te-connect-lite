@@ -1,0 +1,351 @@
+<!-- Main container with flex layout -->
+<div class="flex h-screen">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    [userName]="userName"
+    [userRole]="userRole"
+    [userInitials]="userInitials"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    (logoutEvent)="logout()">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="logout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>{{ getCurrentSubsection() }}</span>
+    </app-header>
+
+    <!-- Animated background elements -->
+    <div class="absolute top-0 right-0 w-1/3 h-1/3 bg-[var(--primary-light)] rounded-full filter blur-3xl opacity-10 animate-float"></div>
+    <div class="absolute bottom-0 left-0 w-1/3 h-1/3 bg-[var(--secondary-light)] rounded-full filter blur-3xl opacity-10 animate-float delay-1000"></div>
+
+    <!-- Loading State -->
+    <div *ngIf="loading" class="flex items-center justify-center min-h-screen">
+      <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-state">
+      <div class="text-red-500 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <p class="text-lg font-medium text-black">{{ error }}</p>
+      <button (click)="refreshData()" class="mt-4 btn-primary">
+        Try Again
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto  bg-orange-50 p-4 lg:p-8">
+      <div *ngIf="!loading && !error && statistics" class="fade-in">
+        <!-- Header -->
+        <div class="mb-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 class="text-3xl font-bold text-black">HR Analytics Dashboard</h1>
+              <p class="mt-1 text-sm text-black">Key metrics and performance indicators</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-4">
+              <button (click)="refreshData()" class="btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh Data
+              </button>
+              <button (click)="exportReport()" class="btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export Report
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <!-- Employee Count -->
+          <div class="glass-card metric-card p-6 rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-black">Total Employees</p>
+                <p class="text-3xl font-bold text-black mt-1">{{ statistics.totalEmployees }}</p>
+              </div>
+              <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Retention Rate -->
+          <div class="glass-card metric-card p-6 rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-black">Retention Rate</p>
+                <p class="text-3xl font-bold mt-1" [ngClass]="getMetricColor(statistics.retentionRate, 'rate')">
+                  {{ statistics.retentionRate }}%
+                </p>
+              </div>
+              <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getMetricIcon(statistics.retentionRate, 'rate')" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Average Performance -->
+          <div class="glass-card metric-card p-6 rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-black">Avg. Performance</p>
+                <p class="text-3xl font-bold mt-1" [ngClass]="getMetricColor(statistics.averagePerformance, 'score')">
+                  {{ statistics.averagePerformance }}/10
+                </p>
+              </div>
+              <div class="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getMetricIcon(statistics.averagePerformance, 'score')" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attendance Rate -->
+          <div class="glass-card metric-card p-6 rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-black">Attendance Rate</p>
+                <p class="text-3xl font-bold mt-1" [ngClass]="getMetricColor(statistics.attendanceRate, 'rate')">
+                  {{ statistics.attendanceRate }}%
+                </p>
+              </div>
+              <div class="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getMetricIcon(statistics.attendanceRate, 'rate')" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- Department Distribution -->
+          <div class="glass-card rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-black">Employee Distribution by Department</h2>
+            </div>
+            <div class="p-6">
+              <div class="chart-container">
+                <canvas baseChart
+                  [data]="departmentChartData"
+                  [options]="pieChartOptions"
+                  type="pie">
+                </canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Performance Trends -->
+          <div class="glass-card rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-black">Performance Trends</h2>
+            </div>
+            <div class="p-6">
+              <div class="chart-container">
+                <canvas baseChart
+                  [data]="performanceChartData"
+                  [options]="lineChartOptions"
+                  type="line">
+                </canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activities and Turnover Analysis -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- Recent Activities -->
+          <div class="glass-card rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-black">Recent HR Activities</h2>
+            </div>
+            <div class="activity-list divide-y divide-gray-200">
+              <div *ngFor="let activity of statistics.recentActivities" class="p-6 hover:bg-gray-50 transition-all duration-200">
+                <div class="flex items-start space-x-3">
+                  <div class="flex-shrink-0 h-7 w-7 rounded-full" [ngClass]="'bg-' + activity.color + '-100'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" [ngClass]="'text-' + activity.color + '-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="activity.icon" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-black">{{ activity.title }}</p>
+                    <p class="text-xs text-black mt-1">{{ activity.description }}</p>
+                    <p class="text-xs text-black mt-1">{{ activity.timestamp | date:'medium' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Turnover Analysis -->
+          <div class="glass-card rounded-xl transition-all duration-300 hover:shadow-xl slide-up">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-black">Turnover Analysis</h2>
+            </div>
+            <div class="p-6">
+              <div class="chart-container">
+                <canvas baseChart
+                  [data]="turnoverChartData"
+                  [options]="barChartOptions"
+                  type="bar">
+                </canvas>
+              </div>
+              <div class="mt-4">
+                <div class="bg-gray-100 rounded-lg p-4">
+                  <h3 class="text-sm font-medium text-black mb-2">Key Insights</h3>
+                  <ul class="text-sm text-black space-y-2">
+                    <li *ngFor="let insight of statistics.turnoverAnalysis.insights" class="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                      </svg>
+                      <span>{{ insight }}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Profile Modal -->
+<div *ngIf="showProfileModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-8 relative">
+    <button (click)="closeProfileModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl font-bold">&times;</button>
+    <ng-container [ngSwitch]="profileModalType">
+      <div *ngSwitchCase="'view'">
+        <h2 class="text-2xl font-bold mb-6 text-center">Profile Details</h2>
+        <div class="flex flex-col items-center mb-6">
+          <div class="relative mb-3">
+            <div class="h-24 w-24 rounded-full bg-gradient-to-r from-[#0F172A] to-[#2D78E0] flex items-center justify-center text-white font-bold text-3xl shadow-lg border-4 border-white overflow-hidden">
+              <!-- Show image if available, otherwise initials -->
+              <ng-container *ngIf="userImage; else initialsBlock">
+                <img [src]="userImage" alt="Profile" class="object-cover w-full h-full" />
+              </ng-container>
+              <ng-template #initialsBlock>{{ userInitials }}</ng-template>
+            </div>
+            <label class="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 cursor-pointer shadow-lg border-2 border-white transition-all duration-200" title="Upload Photo">
+              <i class="fas fa-camera"></i>
+              <input type="file" accept="image/*" class="hidden" (change)="onProfileImageChange($event)">
+            </label>
+          </div>
+        </div>
+        <div class="space-y-3 text-center">
+          <div>
+            <span class="block text-gray-500 text-sm">Name</span>
+            <span class="block text-lg font-semibold text-gray-900">{{ userName }}</span>
+          </div>
+          <div>
+            <span class="block text-gray-500 text-sm">Email</span>
+            <span class="block text-lg font-semibold text-gray-900">{{ userEmail || '—' }}</span>
+          </div>
+          <div>
+            <span class="block text-gray-500 text-sm">Role</span>
+            <span class="block text-lg font-semibold text-gray-900">{{ userRole }}</span>
+          </div>
+        </div>
+      </div>
+      <div *ngSwitchCase="'edit'">
+        <h2 class="text-xl font-bold mb-4">Edit Profile</h2>
+        <!-- Add your edit profile form here -->
+        <p>Edit form goes here...</p>
+      </div>
+      <div *ngSwitchCase="'password'">
+        <h2 class="text-xl font-bold mb-4">Change Password</h2>
+        <!-- Add your change password form here -->
+        <p>Password change form goes here...</p>
+      </div>
+    </ng-container>
+  </div>
+</div>
+<div class="grid grid-cols-7 gap-0 w-full max-w-full" style="width: 700px;">
+  <div class="border p-2">1</div>
+  <div class="border p-2">2</div>
+  <div class="border p-2">3</div>
+  <div class="border p-2">4</div>
+  <div class="border p-2">5</div>
+  <div class="border p-2">6</div>
+  <div class="border p-2">7</div>
+</div>
+<style>
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    background-color: var(--primary);
+    border-radius: 0.375rem;
+  }
+  
+  .btn-primary:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.5), 0 0 0 4px white;
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+  }
+
+  .animate-float {
+    animation: float 10s ease-in-out infinite;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+</style>

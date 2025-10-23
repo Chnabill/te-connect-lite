@@ -1,0 +1,30 @@
+<div class="p-6 space-y-6 bg-white shadow rounded">
+    <h1 class="text-2xl font-bold text-secondary"> Annual Leave Request</h1>
+  
+    <form (ngSubmit)="submitForm()" class="space-y-4">
+      <div>
+        <label>Start Date</label>
+        <input type="date" [(ngModel)]="form.startDate" name="startDate" required class="w-full p-2 border rounded" />
+      </div>
+      <div>
+        <label>End Date</label>
+        <input type="date" [(ngModel)]="form.endDate" name="endDate" required class="w-full p-2 border rounded" />
+      </div>
+      <div>
+        <label>Reason</label>
+        <textarea [(ngModel)]="form.reason" name="reason" rows="3" required class="w-full border p-2 rounded"></textarea>
+      </div>
+      <div>
+        <label>Attachment (Optional)</label>
+        <input type="file" (change)="handleFile($event)" class="block w-full text-sm text-gray-500" />
+      </div>
+      <div>
+        <p class="text-sm text-gray-700">Estimated Duration: <strong>{{ duration }} days</strong></p>
+      </div>
+      <div class="flex gap-4">
+        <button type="submit" class="bg-primary text-white px-4 py-2 rounded">Submit</button>
+        <button type="button" class="bg-gray-400 text-white px-4 py-2 rounded">Save Draft</button>
+      </div>
+    </form>
+  </div>
+  

@@ -1,0 +1,605 @@
+<div class="flex h-screen bg-background overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    class="h-screen">
+  </app-sidebar>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Top Header -->
+    <app-header
+      (toggleSidebarClicked)="toggleSidebar()"
+      (logoutClicked)="onLogout()"
+    >
+      <span section-title>{{ getSectionTitle() }}</span>
+      <span subsection-title>Employee Performance & Evaluation Management</span>
+    </app-header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-background">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Welcome Section -->
+        <div class="mb-8">
+          <div class="bg-gradient-to-r from-primary to-accent rounded-2xl p-6 text-white shadow-xl">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-2xl font-bold mb-2">
+                  <i class="fas fa-chart-line mr-3"></i>
+                  Performance Evaluations
+                </h1>
+                <p class="text-white/90">Monitor and manage employee performance assessments</p>
+              </div>
+              <div class="hidden md:block">
+                <div class="text-right">
+                  <div class="text-3xl font-bold">{{ getCompletionRate() }}%</div>
+                  <div class="text-sm text-white/80">Completion Rate</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Total Evaluations</p>
+                <p class="text-2xl font-bold text-gray-900">{{ evaluations.length }}</p>
+              </div>
+              <div class="p-3 bg-blue-100 rounded-full">
+                <i class="fas fa-clipboard-list text-blue-600 text-xl"></i>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+              <span class="text-green-600 font-medium">+{{ getNewEvaluationsCount() }}</span>
+              <span class="text-gray-500 ml-1">this month</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Average Score</p>
+                <p class="text-2xl font-bold text-gray-900">{{ getAverageScore() }}</p>
+              </div>
+              <div class="p-3 bg-green-100 rounded-full">
+                <i class="fas fa-star text-green-600 text-xl"></i>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+              <span class="text-green-600 font-medium">+2.5%</span>
+              <span class="text-gray-500 ml-1">from last quarter</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Excellent Ratings</p>
+                <p class="text-2xl font-bold text-gray-900">{{ getExcellentCount() }}</p>
+              </div>
+              <div class="p-3 bg-yellow-100 rounded-full">
+                <i class="fas fa-trophy text-yellow-600 text-xl"></i>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+              <span class="text-green-600 font-medium">{{ getExcellentPercentage() }}%</span>
+              <span class="text-gray-500 ml-1">of total</span>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-gray-600">Pending Reviews</p>
+                <p class="text-2xl font-bold text-gray-900">{{ getPendingCount() }}</p>
+              </div>
+              <div class="p-3 bg-orange-100 rounded-full">
+                <i class="fas fa-clock text-orange-600 text-xl"></i>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+              <span class="text-orange-600 font-medium">{{ getPendingPercentage() }}%</span>
+              <span class="text-gray-500 ml-1">need attention</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters and Actions -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+          <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              <div class="relative">
+                <select [(ngModel)]="selectedFilter" (change)="applyFilter()" 
+                        class="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                  <option value="all">All Evaluations</option>
+                  <option value="excellent">Excellent (90-100)</option>
+                  <option value="good">Good (80-89)</option>
+                  <option value="average">Average (70-79)</option>
+                  <option value="needs-improvement">Needs Improvement (<70)</option>
+                  <option value="pending">Pending Review</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
+              </div>
+              
+              <div class="relative">
+                <input type="text" [(ngModel)]="searchTerm" (input)="applySearch()" 
+                       placeholder="Search employees..." 
+                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+              </div>
+            </div>
+            
+            <div class="flex space-x-3">
+              <button (click)="refreshEvaluations()" 
+                      class="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Refresh
+              </button>
+              
+              <button (click)="exportEvaluations()" 
+                      class="flex items-center px-4 py-2 bg-secondary text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                <i class="fas fa-download mr-2"></i>
+                Export
+              </button>
+              
+              <button (click)="openAddModal()" 
+                      class="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-orange-600 transition-colors duration-200">
+                <i class="fas fa-plus mr-2"></i>
+                Add Evaluation
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evaluations List -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Employee Evaluations</h3>
+            <p class="text-sm text-gray-600 mt-1">Manage and track performance assessments</p>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Employee
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Department
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Score
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Performance
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr *ngFor="let eval of filteredEvaluations; trackBy: trackByEvaluation" 
+                    class="hover:bg-gray-50 transition-colors duration-200">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
+                          {{ getInitials(eval.employeeName) }}
+                        </div>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">{{ eval.employeeName }}</div>
+                        <div class="text-sm text-gray-500">{{ eval.position }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                          [ngClass]="getDepartmentClass(eval.department)">
+                      {{ eval.department }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="text-lg font-bold" [ngClass]="getScoreColor(eval.score)">{{ eval.score }}</div>
+                      <div class="ml-2 text-sm text-gray-500">/100</div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                          [ngClass]="getPerformanceClass(eval.score)">
+                      <i class="fas fa-circle text-xs mr-1"></i>
+                      {{ getPerformanceLevel(eval.score) }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {{ formatDate(eval.date) }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                          [ngClass]="getStatusClass(eval.status)">
+                      {{ eval.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div class="flex items-center justify-end space-x-2">
+                      <button (click)="viewEvaluation(eval)" 
+                              class="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-colors duration-200"
+                              title="View Details">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button (click)="openEditModal(eval)" 
+                              class="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-colors duration-200"
+                              title="Edit Evaluation">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button (click)="deleteEvaluation(eval.id)" 
+                              class="text-red-600 hover:text-red-900 p-2 rounded-lg hover:bg-red-50 transition-colors duration-200"
+                              title="Delete Evaluation">
+                        <i class="fas fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- Empty State -->
+            <div *ngIf="filteredEvaluations.length === 0" class="text-center py-12">
+              <div class="mx-auto h-24 w-24 text-gray-400 mb-4">
+                <i class="fas fa-clipboard-list text-6xl"></i>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No evaluations found</h3>
+              <p class="text-gray-500 mb-6">Get started by creating your first employee evaluation.</p>
+              <button (click)="openAddModal()" 
+                      class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-orange-600 transition-colors duration-200">
+                <i class="fas fa-plus mr-2"></i>
+                Add First Evaluation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Add Evaluation Modal -->
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="p-2 bg-primary/10 rounded-lg mr-3">
+            <i class="fas fa-plus text-primary text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Add New Evaluation</h3>
+            <p class="text-sm text-gray-500">Create a performance evaluation for an employee</p>
+          </div>
+        </div>
+        <button (click)="closeAddModal()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="p-6">
+      <form (ngSubmit)="saveEvaluation()" #evaluationForm="ngForm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Employee Name <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [(ngModel)]="newEval.employeeName" name="employeeName" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                   placeholder="Enter employee full name">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Position <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [(ngModel)]="newEval.position" name="position" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                   placeholder="Job title or position">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Department <span class="text-red-500">*</span>
+            </label>
+            <select [(ngModel)]="newEval.department" name="department" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200">
+              <option value="">Select Department</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">Human Resources</option>
+              <option value="Finance">Finance</option>
+              <option value="Operations">Operations</option>
+              <option value="Design">Design</option>
+              <option value="Support">Customer Support</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Performance Score <span class="text-red-500">*</span>
+            </label>
+            <input type="number" [(ngModel)]="newEval.score" name="score" required
+                   min="0" max="100" step="1"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                   placeholder="0-100">
+            <div class="mt-1 text-xs text-gray-500">
+              Score range: 0-100 (90-100: Excellent, 80-89: Good, 70-79: Average, <70: Needs Improvement)
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Evaluation Date <span class="text-red-500">*</span>
+            </label>
+            <input type="date" [(ngModel)]="newEval.date" name="date" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200">
+          </div>
+          
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Performance Comments
+            </label>
+            <textarea [(ngModel)]="newEval.comments" name="comments" rows="4"
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                      placeholder="Detailed feedback on employee performance, strengths, areas for improvement..."></textarea>
+          </div>
+          
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select [(ngModel)]="newEval.status" name="status"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200">
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending Review</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+          <button type="button" (click)="closeAddModal()" 
+                  class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="!evaluationForm.valid"
+                  class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 font-medium">
+            <i class="fas fa-save mr-2"></i>
+            Save Evaluation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Evaluation Modal -->
+<div *ngIf="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="p-2 bg-blue-100 rounded-lg mr-3">
+            <i class="fas fa-edit text-blue-600 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Edit Evaluation</h3>
+            <p class="text-sm text-gray-500">Update performance evaluation details</p>
+          </div>
+        </div>
+        <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="p-6">
+      <form (ngSubmit)="saveEditedEvaluation()" #editForm="ngForm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Employee Name <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [(ngModel)]="editEval.employeeName" name="employeeName" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                   placeholder="Enter employee full name">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Position <span class="text-red-500">*</span>
+            </label>
+            <input type="text" [(ngModel)]="editEval.position" name="position" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                   placeholder="Job title or position">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Department <span class="text-red-500">*</span>
+            </label>
+            <select [(ngModel)]="editEval.department" name="department" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200">
+              <option value="Engineering">Engineering</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Sales">Sales</option>
+              <option value="HR">Human Resources</option>
+              <option value="Finance">Finance</option>
+              <option value="Operations">Operations</option>
+              <option value="Design">Design</option>
+              <option value="Support">Customer Support</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Performance Score <span class="text-red-500">*</span>
+            </label>
+            <input type="number" [(ngModel)]="editEval.score" name="score" required
+                   min="0" max="100" step="1"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                   placeholder="0-100">
+            <div class="mt-1 text-xs text-gray-500">
+              Score range: 0-100 (90-100: Excellent, 80-89: Good, 70-79: Average, <70: Needs Improvement)
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Evaluation Date <span class="text-red-500">*</span>
+            </label>
+            <input type="date" [(ngModel)]="editEval.date" name="date" required
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200">
+          </div>
+          
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Performance Comments
+            </label>
+            <textarea [(ngModel)]="editEval.comments" name="comments" rows="4"
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200"
+                      placeholder="Detailed feedback on employee performance, strengths, areas for improvement..."></textarea>
+          </div>
+          
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select [(ngModel)]="editEval.status" name="status"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors duration-200">
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending Review</option>
+              <option value="Draft">Draft</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+          <button type="button" (click)="closeEditModal()" 
+                  class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="!editForm.valid"
+                  class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 font-medium">
+            <i class="fas fa-save mr-2"></i>
+            Update Evaluation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- View Evaluation Modal -->
+<div *ngIf="showViewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="p-2 bg-blue-100 rounded-lg mr-3">
+            <i class="fas fa-eye text-blue-600 text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Evaluation Details</h3>
+            <p class="text-sm text-gray-500">Performance evaluation overview</p>
+          </div>
+        </div>
+        <button (click)="closeViewModal()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="p-6" *ngIf="viewEval">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="md:col-span-2 bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-lg font-semibold text-gray-900">{{ viewEval.employeeName }}</h4>
+              <p class="text-sm text-gray-600">{{ viewEval.position }} • {{ viewEval.department }}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold" [ngClass]="getScoreColor(viewEval.score)">{{ viewEval.score }}/100</div>
+              <div class="text-sm text-gray-500">Performance Score</div>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Performance Level</label>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" 
+                [ngClass]="getPerformanceClass(viewEval.score)">
+            <i class="fas fa-circle text-xs mr-2"></i>
+            {{ getPerformanceLevel(viewEval.score) }}
+          </span>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Evaluation Date</label>
+          <p class="text-gray-900">{{ formatDate(viewEval.date) }}</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [ngClass]="getStatusClass(viewEval.status)">
+            {{ viewEval.status }}
+          </span>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                [ngClass]="getDepartmentClass(viewEval.department)">
+            {{ viewEval.department }}
+          </span>
+        </div>
+        
+        <div class="md:col-span-2" *ngIf="viewEval.comments">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Performance Comments</label>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <p class="text-gray-900 leading-relaxed">{{ viewEval.comments }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+        <button (click)="closeViewModal()" 
+                class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium">
+          Close
+        </button>
+        <button (click)="openEditModal(viewEval); closeViewModal()" 
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-medium">
+          <i class="fas fa-edit mr-2"></i>
+          Edit Evaluation
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="flex h-screen bg-gray-100 overflow-hidden">
+  <!-- Sidebar -->
+  <app-sidebar
+    [sidebarOpen]="sidebarOpen"
+    [isMobile]="isMobile"
+    [activeSection]="activeSection"
+    [sidebarItems]="sidebarItems"
+    (toggleSidebarEvent)="toggleSidebar()"
+    (setActiveSectionEvent)="setActiveSection($event)"
+    (logoutEvent)="logout()"
+    class="h-screen">
+  </app-sidebar>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <app-header
+        (toggleSidebarClicked)="toggleSidebar()"
+        (logoutClicked)="logout()"
+      >
+        <span section-title>{{ getSectionTitle() }}</span>
+        <span subsection-title>Messagerie</span>
+      </app-header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar (User List) -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <img *ngIf="currentUser?.user_image" [src]="currentUser?.user_image" class="avatar" />
+          <span class="user-name">{{ currentUser?.full_name }}</span>
+        </div>
+        <div class="search-box">
+          <input type="text" [(ngModel)]="search" placeholder="Search..." />
+        </div>
+        <ul class="user-list">
+          <li *ngFor="let user of filteredUsers()" (click)="selectUser(user)" [class.active]="selectedUser && selectedUser.id === user.id">
+            <img *ngIf="user.user_image" [src]="user.user_image" class="avatar-small" />
+            <span>{{ user.full_name }}</span>
+          </li>
+        </ul>
+        <div *ngIf="filteredUsers().length === 0" class="no-users">No users found.</div>
+      </aside>
+
+      <!-- Chat Window -->
+      <section class="chat-section flex-1 flex flex-col">
+        <div class="chat-header" *ngIf="selectedUser">
+          <img *ngIf="selectedUser.user_image" [src]="selectedUser.user_image" class="avatar" />
+          <span class="user-name">{{ selectedUser.full_name }}</span>
+        </div>
+        <div class="chat-messages flex-1 overflow-y-auto" *ngIf="selectedUser" #chatMessages>
+          <div *ngFor="let msg of messages" [ngClass]="{'message-row': true, 'own': msg.sender_id === currentUserId}">
+            <div class="message-bubble" [ngClass]="{'own-bubble': msg.sender_id === currentUserId, 'other-bubble': msg.sender_id !== currentUserId}">
+              <span>{{ msg.content }}</span>
+              <span class="timestamp">{{ msg.timestamp | date:'shortTime' }} <span *ngIf="msg.sender_id === currentUserId && msg.seen">✔✔</span></span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-placeholder flex-1 flex items-center justify-center" *ngIf="!selectedUser">
+          <span>Select a conversation to start chatting</span>
+        </div>
+        <form *ngIf="selectedUser" (ngSubmit)="sendMessage()" class="chat-input-row">
+          <input type="text" [(ngModel)]="newMessage" name="message" placeholder="Type a message..." autocomplete="off" />
+          <button type="submit"><i class="fas fa-paper-plane"></i></button>
+        </form>
+      </section>
+    </div>
+  </div>
+</div>
